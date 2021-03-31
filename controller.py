@@ -10,11 +10,14 @@ from service import Service
 
 import logging
 
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
 app = Flask(__name__)
 dct = {}
 
 @app.route('/storage/<filename>', methods=['PUT'])
 def put_file(filename):
+    logging.info("PUT " + filename)
     if not request.is_json:
         return "error", 400
     service.put('/storage/' + filename, request.data)
@@ -22,6 +25,7 @@ def put_file(filename):
 
 @app.route('/storage/<filename>', methods=['GET'])
 def get_file(filename):
+    logging.info("GET " + filename)
     res = service.get('/storage/' + filename)
     if (res == None):
         return "something", 404
@@ -30,13 +34,12 @@ def get_file(filename):
 
 @app.route('/storage/<filename>', methods=['DELETE'])
 def delete_file(filename):
+    logging.info("DELETE " + filename)
     service.delete('/storage/' + filename)
     return 'file deleted', 204
 
 
 if __name__ == "__main__":
-    print("Hello\nim\nhere")
-
     redis_host = os.getenv('REDIS_HOST')
     redis_port = int(os.getenv('REDIS_PORT'))
     redis_client = redis.Redis(host=redis_host, port=redis_port, decode_responses=True)
