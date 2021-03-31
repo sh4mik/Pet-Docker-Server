@@ -21,7 +21,7 @@ class MongoRepository:
     def get(self, key):
         res = self.db.find_one({"key":key})
         if (res != None):
-            return res.value
+            return res['value']
 
     def put(self, key, value):
         return self.db.insert_one({"key" : key, "value":value})    

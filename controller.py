@@ -26,7 +26,7 @@ def get_file(filename):
     if (res == None):
         return "something", 404
     else:
-        return res["value"], 200
+        return res, 200
 
 @app.route('/storage/<filename>', methods=['DELETE'])
 def delete_file(filename):

@@ -7,7 +7,7 @@ start: build
 	docker-compose up
 
 stop:
-	docker stop server
+	docker-compose stop
 
 clean:
 	docker-compose stop
