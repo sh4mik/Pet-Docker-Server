@@ -13,30 +13,41 @@ import logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__)
-dct = {}
+users = {"dimka228":"12345678", "danger_penetrator":"87654321", "lancelot":"honormagic"}
 
 @app.route('/storage/<filename>', methods=['PUT'])
 def put_file(filename):
     logging.info("PUT " + filename)
     if not request.is_json:
         return "error", 400
-    service.put('/storage/' + filename, request.data)
-    return request.data, 201
+    if users.get(request.authorization.get('username')) == request.authorization.get('password'):
+        service.put('/storage/' + filename, request.data)
+        return request.data, 201
+    else:
+        return "auth", 400
+
 
 @app.route('/storage/<filename>', methods=['GET'])
 def get_file(filename):
     logging.info("GET " + filename)
     res = service.get('/storage/' + filename)
-    if (res == None):
-        return "something", 404
+
+    if users.get(request.authorization.get('username')) == request.authorization.get('password'):
+        if (res == None):
+            return "something", 404
+        else:
+            return res, 200
     else:
-        return res, 200
+        return "auth", 400
 
 @app.route('/storage/<filename>', methods=['DELETE'])
 def delete_file(filename):
     logging.info("DELETE " + filename)
-    service.delete('/storage/' + filename)
-    return 'file deleted', 204
+    if users.get(request.authorization.get('username')) == request.authorization.get('password'):
+        service.delete('/storage/' + filename)
+        return 'file deleted', 204
+    else:
+        return "auth", 400
 
 
 if __name__ == "__main__":
