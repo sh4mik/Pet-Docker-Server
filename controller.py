@@ -1,5 +1,7 @@
 from flask import Flask, render_template
 from flask import request
+from flask import abort
+from functools import wraps
 import os
 
 import pymongo
@@ -15,39 +17,44 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 app = Flask(__name__)
 users = {"dimka228":"12345678", "danger_penetrator":"87654321", "lancelot":"honormagic"}
 
+def authenticate(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if users.get(request.authorization.get('username')) == request.authorization.get('password'):
+            return func(*args, **kwargs)   
+        else:
+            return "authenticate", 401
+    return wrapper
+
+
 @app.route('/storage/<filename>', methods=['PUT'])
+@authenticate
 def put_file(filename):
     logging.info("PUT " + filename)
     if not request.is_json:
         return "error", 400
-    if users.get(request.authorization.get('username')) == request.authorization.get('password'):
-        service.put('/storage/' + filename, request.data)
-        return request.data, 201
-    else:
-        return "auth", 400
+    service.put('/storage/' + filename, request.data)
+    return request.data, 201
 
 
 @app.route('/storage/<filename>', methods=['GET'])
+@authenticate
 def get_file(filename):
     logging.info("GET " + filename)
     res = service.get('/storage/' + filename)
-
-    if users.get(request.authorization.get('username')) == request.authorization.get('password'):
-        if (res == None):
-            return "something", 404
-        else:
-            return res, 200
+    if (res == None):
+        return "something", 404
     else:
-        return "auth", 400
+        return res, 200
 
 @app.route('/storage/<filename>', methods=['DELETE'])
+@authenticate
 def delete_file(filename):
     logging.info("DELETE " + filename)
-    if users.get(request.authorization.get('username')) == request.authorization.get('password'):
-        service.delete('/storage/' + filename)
-        return 'file deleted', 204
-    else:
-        return "auth", 400
+
+    service.delete('/storage/' + filename)
+    return 'file deleted', 204
+
 
 
 if __name__ == "__main__":
