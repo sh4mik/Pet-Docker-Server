@@ -17,6 +17,7 @@ class MyTestCase(unittest.TestCase):
 
         self.dct = dct
 
+    # Normal
     def test_put(self):
         self.app.put("/storage/first", data='{"key": "value"}')
         assert self.dct['/storage/first'].decode() == '{"key": "value"}'
@@ -30,6 +31,26 @@ class MyTestCase(unittest.TestCase):
         self.dct['/storage/first'] = '{"key": "value"}'
         self.app.delete('/storage/first', follow_redirects=True)
         self.assertEqual(self.dct.get('/storage/first'), None)
+    
+    # Double calls
+    def test_put_double(self):
+        self.app.put("/storage/first", data='{"key": "value"}')
+        self.app.put("/storage/first", data='{"key": "value"}')
+        assert self.dct['/storage/first'].decode() == '{"key": "value"}'
+
+    def test_get_double(self):
+        self.dct['/storage/first'] = '{"key": "value"}'
+        response = self.app.get('/storage/first')
+        response = self.app.get('/storage/first')
+        self.assertEqual(response.data.decode(), '{"key": "value"}')
+
+    def test_delete_double(self):
+        self.dct['/storage/first'] = '{"key": "value"}'
+        self.app.delete('/storage/first', follow_redirects=True)
+        self.app.delete('/storage/first', follow_redirects=True)
+        self.assertEqual(self.dct.get('/storage/first'), None)
+
+    # Code returns
 
     def test_put_returns201(self):
         response = self.app.put("/storage/first", data='{"key": "value"}')
